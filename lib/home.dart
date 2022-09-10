@@ -3,8 +3,7 @@ import 'package:vgv_assessment/models/coffee_image.dart';
 import 'package:vgv_assessment/services/api.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key, required this.title}) : super(key: key);
-  final String title;
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -12,74 +11,83 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late CoffeeImage coffeeImage;
-  bool initialized = false;
+  bool _initialized = false;
+  bool _fetchingImage = false;
 
   void _getNewImage() {
     setState(() {
+      _fetchingImage = true;
       getCoffeeImage().then((ci) {
-        coffeeImage = ci;
-        initialized = true;
+        setState(() {
+          coffeeImage = ci;
+          _initialized = true;
+          _fetchingImage = false;
+        });
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (!initialized)
-              GestureDetector(
-                  onTap: _getNewImage,
-                  child: const SizedContainer(text: 'Click to Get Started')),
-            if (initialized)
-              Column(
-                children: [
-                  Image.network(
-                    coffeeImage.imageUrl,
-                    height: 300,
-                    loadingBuilder: (context, child, progress) {
-                      if (progress == null) {
-                        return child;
-                      } else {
-                        return const SizedContainer(
-                          child: Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      }
-                    },
-                    errorBuilder: (BuildContext context, Object exception,
-                        StackTrace? stackTrace) {
-                      return const SizedContainer(text: 'Whoops...');
-                    },
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!_initialized)
+            GestureDetector(
+              onTap: _getNewImage,
+              child: const SizedContainer(text: 'Click to Get Started'),
+            ),
+          if (_initialized && _fetchingImage)
+            const SizedContainer(
+              text: 'Loading Image',
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          if (_initialized && !_fetchingImage)
+            Column(
+              children: [
+                Image.network(
+                  coffeeImage.imageUrl,
+                  height: 300,
+                  frameBuilder:
+                      (context, child, frame, wasSynchronouslyLoaded) {
+                    if (wasSynchronouslyLoaded) {
+                      return child;
+                    }
+                    return AnimatedOpacity(
+                      child: child,
+                      opacity: frame == null ? 0 : 1,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeIn,
+                    );
+                  },
+                  errorBuilder: (BuildContext context, Object exception,
+                      StackTrace? stackTrace) {
+                    return const SizedContainer(text: 'Whoops...');
+                  },
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Icon(
+                        Icons.favorite_border,
+                        color: Colors.pink.shade200,
+                        size: 35,
+                      ),
+                      ElevatedButton(
+                        onPressed: _getNewImage,
+                        child: const Text('Next Image'),
+                      )
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Icon(
-                          Icons.favorite_border,
-                          color: Colors.pink.shade200,
-                          size: 35,
-                        ),
-                        ElevatedButton(
-                          onPressed: _getNewImage,
-                          child: const Text('Next Image'),
-                        )
-                      ],
-                    ),
-                  )
-                ],
-              )
-          ],
-        ),
+                )
+              ],
+            )
+        ],
       ),
     );
   }
@@ -103,15 +111,20 @@ class SizedContainer extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (child != null) child!,
           if (text != null)
-            Text(
-              text!,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
+            Padding(
+              padding: const EdgeInsets.only(
+                bottom: 25,
+              ),
+              child: Text(
+                text!,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
               ),
             ),
+          if (child != null) child!,
         ],
       ),
     );
