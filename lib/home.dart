@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vgv_assessment/models/coffee_image.dart';
 import 'package:vgv_assessment/services/api.dart';
+import 'package:vgv_assessment/services/storage.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -11,20 +12,34 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late CoffeeImage coffeeImage;
-  bool _initialized = false;
-  bool _fetchingImage = false;
+  bool isFavorited = false;
+  late Future imageFuture;
 
-  void _getNewImage() {
+  Future _getNewImage() async {
     setState(() {
-      _fetchingImage = true;
-      getCoffeeImage().then((ci) {
-        setState(() {
-          coffeeImage = ci;
-          _initialized = true;
-          _fetchingImage = false;
-        });
-      });
+      isFavorited = false;
     });
+    coffeeImage = await getCoffeeImage();
+  }
+
+  favoriteImage() {
+    if (isFavorited) {
+      removeImage(url: coffeeImage.imageUrl);
+      setState(() {
+        isFavorited = false;
+      });
+    } else {
+      saveImage(coffeeImage.imageUrl);
+      setState(() {
+        isFavorited = true;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    imageFuture = _getNewImage();
+    super.initState();
   }
 
   @override
@@ -33,60 +48,65 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (!_initialized)
-            GestureDetector(
-              onTap: _getNewImage,
-              child: const SizedContainer(text: 'Click to Get Started'),
-            ),
-          if (_initialized && _fetchingImage)
-            const SizedContainer(
-              text: 'Loading Image',
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          if (_initialized && !_fetchingImage)
-            Column(
-              children: [
-                Image.network(
-                  coffeeImage.imageUrl,
-                  height: 300,
-                  frameBuilder:
-                      (context, child, frame, wasSynchronouslyLoaded) {
-                    if (wasSynchronouslyLoaded) {
-                      return child;
+          Column(
+            children: [
+              FutureBuilder(
+                  future: imageFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done) {
+                      return Image.network(
+                        coffeeImage.imageUrl,
+                        height: 300,
+                        frameBuilder:
+                            (context, child, frame, wasSynchronouslyLoaded) {
+                          if (wasSynchronouslyLoaded) {
+                            return child;
+                          }
+                          return AnimatedOpacity(
+                            child: child,
+                            opacity: frame == null ? 0 : 1,
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeIn,
+                          );
+                        },
+                        errorBuilder: (BuildContext context, Object exception,
+                            StackTrace? stackTrace) {
+                          return const SizedContainer(text: 'Whoops...');
+                        },
+                      );
+                    } else {
+                      return const SizedContainer(
+                        text: 'Loading Image',
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
                     }
-                    return AnimatedOpacity(
-                      child: child,
-                      opacity: frame == null ? 0 : 1,
-                      duration: const Duration(milliseconds: 250),
-                      curve: Curves.easeIn,
-                    );
-                  },
-                  errorBuilder: (BuildContext context, Object exception,
-                      StackTrace? stackTrace) {
-                    return const SizedContainer(text: 'Whoops...');
-                  },
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Icon(
-                        Icons.favorite_border,
+                  }),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        favoriteImage();
+                      },
+                      child: Icon(
+                        isFavorited ? Icons.favorite : Icons.favorite_border,
                         color: Colors.pink.shade200,
                         size: 35,
                       ),
-                      ElevatedButton(
-                        onPressed: _getNewImage,
-                        child: const Text('Next Image'),
-                      )
-                    ],
-                  ),
-                )
-              ],
-            )
+                    ),
+                    ElevatedButton(
+                      onPressed: _getNewImage,
+                      child: const Text('Next Image'),
+                    )
+                  ],
+                ),
+              )
+            ],
+          )
         ],
       ),
     );
