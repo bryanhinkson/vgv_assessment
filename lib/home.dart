@@ -11,7 +11,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late CoffeeImage coffeeImage;
+  CoffeeImage? coffeeImage;
   bool isFavorited = false;
   late Future<CoffeeImage> imageFuture;
 
@@ -24,15 +24,17 @@ class _HomePageState extends State<HomePage> {
 
   favoriteImage() {
     if (isFavorited) {
-      removeImage(url: coffeeImage.imageUrl);
+      removeImage(url: coffeeImage!.imageUrl);
       setState(() {
         isFavorited = false;
       });
     } else {
-      saveImage(coffeeImage.imageUrl);
       setState(() {
         isFavorited = true;
       });
+      if (coffeeImage != null) {
+        saveImage(coffeeImage!.imageUrl);
+      }
     }
   }
 

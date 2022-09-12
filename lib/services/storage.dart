@@ -6,6 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vgv_assessment/models/coffee_image.dart';
 
 Future<bool> saveImage(String url) async {
+  // I realize that next line is creating a dependancy with `http` and that it
+  // could be solved using an additional layer but that felt like overkill for this example
+  // Another solution would be to pass in the image data directly
   final fileName = getFileNameFromUrl(url);
   final SharedPreferences preferences = await SharedPreferences.getInstance();
   Response response = await get(

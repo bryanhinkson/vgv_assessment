@@ -1,16 +1,22 @@
 # vgv_assessment
 
-A new Flutter project.
+Very Good Coffee App
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+To run this app you can run `flutter run` in your terminal and it will target a device/simulator/emulator that you currently have running.
 
-A few resources to get you started if this is your first Flutter project:
+if you are using vscode I have also included a `launch.json` that can be used to run the application in your debugger by selecting the `run and debug` menu item in the side bar and then clicking the green arrow button in the top left.
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+## How the app works
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+When you first load the app it will bring you to a page where a coffee image will be displayed. There are two buttons that you can interact with:
+- The `heart/favorite` icon where you can favorite an image.  This will save that image locally using `shared_preferences` (There is probably a better image storage solution out there but I went with this for simplicity and familiarity)
+- The `Next Image` button will load the next image and reset the favorite icon if an image was favorited
+
+### Navigation
+The app has two pages: 
+- Home (Where you can cycle through and favorite images)
+- Favorites (Where you can view and delete your favorite images)
+
+You can switch between the two of them using the bottom navigation.  That is tapping on the home or favorites icon at the bottom of the app screen.
