@@ -26,12 +26,6 @@ Future<bool> removeImage({String? url, String? fileName}) async {
   return preferences.remove(fileName!);
 }
 
-Future<Uint8List> getFavoritedImageBytes(String fileName) async {
-  final SharedPreferences preferences = await SharedPreferences.getInstance();
-  Uint8List bytes = base64Decode(preferences.getString(fileName)!);
-  return bytes;
-}
-
 Future<List<CoffeeImage>> getAllFavoritedImageBytes() async {
   final SharedPreferences preferences = await SharedPreferences.getInstance();
   final fileNames = preferences.getKeys();

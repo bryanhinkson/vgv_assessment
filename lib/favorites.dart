@@ -26,6 +26,15 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (initialized && images.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 25),
+          child: Text('Looks like you haven\'t favorited any images'),
+        ),
+      );
+    }
+
     if (initialized) {
       return ListView(
         children: [
@@ -62,11 +71,6 @@ class _FavoritesPageState extends State<FavoritesPage> {
               ),
             ),
         ],
-      );
-    }
-    if (initialized && images.isEmpty) {
-      return const Center(
-        child: Text('Looks like you haven\'t favorited any images'),
       );
     }
 

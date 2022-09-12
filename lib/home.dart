@@ -13,13 +13,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late CoffeeImage coffeeImage;
   bool isFavorited = false;
-  late Future imageFuture;
+  late Future<CoffeeImage> imageFuture;
 
-  Future _getNewImage() async {
+  void _getNewImage() {
     setState(() {
       isFavorited = false;
+      imageFuture = getCoffeeImage();
     });
-    coffeeImage = await getCoffeeImage();
   }
 
   favoriteImage() {
@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    imageFuture = _getNewImage();
+    imageFuture = getCoffeeImage();
     super.initState();
   }
 
@@ -52,10 +52,13 @@ class _HomePageState extends State<HomePage> {
             children: [
               FutureBuilder(
                   future: imageFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
+                  builder: (context, AsyncSnapshot<CoffeeImage> snapshot) {
+                    if (snapshot.connectionState == ConnectionState.done &&
+                        snapshot.data != null) {
+                      coffeeImage = snapshot.data!;
+
                       return Image.network(
-                        coffeeImage.imageUrl,
+                        snapshot.data!.imageUrl,
                         height: 300,
                         frameBuilder:
                             (context, child, frame, wasSynchronouslyLoaded) {
